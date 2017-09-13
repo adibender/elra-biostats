@@ -1,0 +1,87 @@
+# History files
+.Rhistory
+
+# Example code in package build process
+*-Ex.R
+
+# R data files from past sessions and saved objectsr
+.Rdata
+*.Rds
+.RDS
+.rds
+
+# RStudio files
+*.Rproj
+.Rproj.user/
+
+# archives
+*.zip
+
+# server/BATCH by-products
+nohup.out
+*.Rout
+
+# knitr byproduct folders
+*_cache/
+*_files/
+cache/
+figure/
+*.jpeg
+*.html
+*.pdf
+
+## batchtools registries
+*-registry/
+
+# sublime text
+.nfs*
+*.sublime-project
+*.sublime-workspace
+
+###LaTeX###
+*.acn
+*.acr
+*.alg
+*.aux
+*.bbl
+*.blg
+*.dvi
+*.fdb_latexmk
+*.glg
+*.glo
+*.gls
+*.idx
+*.ilg
+*.ind
+*.ist
+*.lof
+*.log
+*.lot
+*.maf
+*.mtc
+*.mtc0
+*.nav
+*.nlo
+*.out
+*.pdfsync
+*.ps
+*.snm
+*.synctex.gz
+*.toc
+*.vrb
+*.xdy
+*.tdo
+*.pdf
+.fls
+*.fls
+*.soc
+
+## dropbox
+*.dropbox.attr
+
+## other
+runModelBatchJobs/submitModels*.R
+paper/lda/simulation/
+simulation/modelEvaluation/modelEvalELRA-files
+runModelBatchJobs/gamBatch/
+/runModelBatchJobs/gamHospBatch/

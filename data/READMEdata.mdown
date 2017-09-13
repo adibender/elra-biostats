@@ -1,0 +1,21 @@
+## Data origin
+
+Original data has been requested from Daren Heyland from Wolfgang Hartl and 
+was submitted to the authors in form of a SAS data base and scripts, that 
+produced 3 `.csv` files: 
+
+- `ICU.csv`: Information on ICUs
+- `daily.csv`: Information on daily nutrition protocols/timne-dependent covariates
+- `patient.csv`: Information on patients
+
+These data sets were preprocessed (exclussion of unreasonable observations, 
+e.g. mechanical ventilation after death, and other cleaning and preprocessing 
+steps). To anonymize the data, we also excluded all date-time variables that 
+were used to create information on survival times and censoring times, etc.. 
+The preprocessed and anonymized data is contained in this 
+folder in the `.Rds` format, which can be read into **`R`** using `<- readRDS("data.Rds")
+
+  - `ICU.Rds`: Information on ICUs
+  - `mergedAndCleandData.Rds`: Preprocessd information on daily nutrition merged 
+  with preprocessed patient data
+  - `patient.Rds`: Preprocessed and anonymized patient information
