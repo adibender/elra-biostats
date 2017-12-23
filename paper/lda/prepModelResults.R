@@ -2,6 +2,11 @@ library(tidyr)
 library(dplyr)
 library(ggplot2)
 theme_set(theme_bw())
+library(pammtools)
+library(prodlim)
+library(survival)
+library(mgcv)
+library(elrapack)
 
 model.path      <- "../../runModelBatchJobs/gamBatch/results/"
 model.path.hosp <- "../../runModelBatchJobs/gamHospBatch/results/"
@@ -39,7 +44,6 @@ nutri.diffs.sensitivity <- get_comp_diffs(pat.list.hosp, protocols.df, protocols
 
 ################################################################################
 ## visualize model effects
-library(pam)
 ints <- sort(unique(mod.full.expert.t1$model$intmid))
 pd <- mod.full.expert.t1$model[rep(1, length(ints)),]
 pd$ApacheIIScore <- 1
@@ -162,6 +166,8 @@ ggplot(nutri.diffs.sensitivity, aes(x=intmid)) +
     legend.text  = element_text(size = rel(1.3)),
     strip.text   = element_text(size = rel(1.1)))
 dev.off()
+rm(mod.full.epxert.t1.sensitivity)
+gc()
 
 ################################################################################
 ## heat map for partial nutrition effects
@@ -190,8 +196,7 @@ tidy <- cbind(select(pd, intMat, DaysMat) %>% rename(t = intMat, te = DaysMat),
   mutate(estimate =
       factor(estimate, labels = c("estimate", "upper CI", "lower CI")))
 
-pdf("ELRA_heatmaps.pdf", width=10, height=12)
-ggplot(tidy) +
+elra_heat <- ggplot(tidy) +
   geom_tile(aes(x=te, y=-t, fill = value, col=value)) +
   geom_contour(aes(x=te, y=-t, z =value), bins = 20, size=.1,
     colour = "gray70") +
@@ -210,4 +215,176 @@ ggplot(tidy) +
   theme(panel.grid.minor = element_blank(),
     panel.grid.major = element_blank(),
     legend.position = "bottom")
-dev.off()
+ggsave("ELRA_heatmaps.pdf", elra_heat, width = 10, height = 12)
+ggsave("ELRA_heatmaps.jpg", elra_heat, width = 10, height = 12)
+
+tidy_fit <- filter(tidy, estimate == "estimate")
+
+ex1 <- data.frame(
+  xmin = c(1:11)-0.5,
+  xmax = c(2:12)-0.5,
+  C    = rep(c("C2", "C3"), times = c(5, 6)),
+  ymin = rep(-18, 11),
+  ymax = rep(-19, 11))
+
+elra_heat_est <- ggplot(tidy_fit) +
+  geom_tile(aes(x=te, y=-t, fill = value, col=value)) +
+  geom_contour(aes(x=te, y=-t, z =value), bins = 20, size=.5,
+    colour = "gray70", ) +
+  facet_wrap(~ C, nrow = 1) +
+  coord_cartesian(xlim = c(1,11), ylim= -c(29.5, 4.5)) +
+  scale_x_continuous(breaks = 1:11, minor_breaks = NULL,
+    name = expression("Nutrition day "~t[e])) +
+  scale_y_continuous(breaks = -(4:29 + .5), minor_breaks = NULL,
+    name = expression(tilde(t)[j]),
+    labels = paste0("(",4:29, ",", 5:30, "]"),
+    sec.axis = dup_axis(name="")) +
+  scale_colour_gradient2(na.value = 'grey90', guide = "none") +
+  scale_fill_gradient2(na.value = 'grey90',
+    name = expression("estimated "~tilde(h)(tilde(t)[j], t[e])),
+    guide = guide_colourbar(direction = "vertical")) +
+  theme(
+    axis.text        = element_text(size = rel(1.4)),
+    axis.title       = element_text(size = rel(1.5)),
+    strip.text       = element_text(size = rel(1.5)),
+    legend.text      = element_text(size = rel(1.4)),
+    legend.title     = element_text(size = rel(1.5)),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    legend.position  = "right")
+
+ggsave("elra_heat_estimation.pdf", elra_heat_est, width = 10, height = 6.5)
+ggsave("elra_heat_estimation.jpg", elra_heat_est, width = 10, height = 6.5)
+
+elra_heat_ex <- elra_heat_est+
+  geom_rect(data = ex1, aes(ymin = ymin, ymax = ymax, xmax = xmax, xmin = xmin),
+    alpha = 0, fill = "white", col = "black")
+
+ggsave("elra_heat_ex.pdf", elra_heat_est, width = 10, height = 6.5)
+ggsave("elra_heat_ex.jpg", elra_heat_est, width = 10, height = 6.5)
+
+###################### model comparisons #######################################
+#### compare via apparent C-Index
+nutri <- readRDS("../../dataCurrent/nutri2.Rds")
+mod_simple <- readRDS("../../runModelBatchJobs/simple_tdc_mod.Rds")
+mod_simple2 <- readRDS("../../runModelBatchJobs/simple_tdc_modLLadequ.Rds")
+mod_no_nutri <- readRDS("../../runModelBatchJobs/mod_no_nutrition.Rds")
+
+## calculate apparent C-Index for all
+cind_cumu            <- cindex_wrapper(mod.full.expert.t1, nutri)
+cind_cumu$Model     <- "Main Model"
+cind_simp            <- cindex_wrapper(mod_simple, nutri)
+cind_simp$Model     <- "Model A1"
+cind_simp2           <- cindex_wrapper(mod_simple2, nutri)
+cind_simp2$Model    <- "Model A2"
+cind_no_nutri        <- cindex_wrapper(mod_no_nutri, nutri)
+cind_no_nutri$Model <- "No nutrition"
+
+cind_mods <- bind_rows(cind_cumu, cind_simp, cind_simp2, cind_no_nutri)
+saveRDS(cind_mods, "cindex_application.Rds")
+
+gg_cind <- ggplot(cind_mods, aes(x = times, y = cindex, col = Model)) +
+  geom_line() +
+  ylim(c(0.5, 1)) +
+  ylab("Apparent C-Index")
+
+ggsave("cindexComparisonApplication.pdf", gg_cind, width = 8, height = 4)
+ggsave("cindexComparisonApplication.jpg", gg_cind, width = 8, height = 4)
+
+cind_mods %>%
+  group_by(Model) %>%
+  summarize(mcind = mean(cindex))
+
+
+
+## objects containing information on nutrition history
+protocols.df         <- readRDS("../../protocolsDF.Rds")
+protocols.to.compare <- readRDS("../../protocolsToCompare.Rds")
+med.patient          <- median_patient(subset(nutri, intmid==4.5))
+
+## create "newdata" for all nutrtion profiles used in comparisons A - F
+pat.list.full <- lapply(protocols.df, pattern_pat,
+  ped = nutri, m = mod.full.expert.t1, median.patient = med.patient,
+  effectname = "AdequacyCals")
+pat.list.simple <- lapply(protocols.df, pattern_pat,
+  ped = nutri, m = mod_simple, median.patient = med.patient,
+  effectname = "adeq")
+pat.list.simple2 <- lapply(protocols.df, pattern_pat,
+  ped = nutri, m = mod_simple2, median.patient = med.patient,
+  effectname = "LLadequ")
+adeq_vars <- paste0("adeq", c("Tot0to30", "Tot30To70", "TotAbove70"))
+pat.list.simple[[1]][, adeq_vars]
+pat.list.simple[[2]][, adeq_vars]
+adeq_vars2 <- paste0("LLadequ", c("Tot0to30", "Tot30To70", "TotAbove70"))
+pat.list.simple2[[1]][, adeq_vars2]
+pat.list.simple2[[4]][, adeq_vars2]
+
+#### comparisons A - F
+nutri_diffs_simple <- get_comp_diffs(
+    pat.list.simple,
+    protocols.df,
+    protocols.to.compare,
+    mod_simple,
+    effectname = "adeq") %>%
+  select(-L1, -se)  %>%
+  mutate(Model = "Model A1")
+
+nutri_diffs_simple2 <- get_comp_diffs(
+    pat.list.simple2,
+    protocols.df,
+    protocols.to.compare,
+    mod_simple2,
+    effectname = "adeq") %>%
+  select(-L1, -se)  %>%
+  mutate(Model = "Model A2")
+
+ nutri_diffs_full <- get_comp_diffs(
+    pat.list.full,
+    protocols.df,
+    protocols.to.compare,
+    mod.full.expert.t1,
+    effectname = "AdequacyCals") %>%
+  select(-L1, -se) %>%
+  mutate(Model = "Main Model")
+
+nutri_diffs_comp <- bind_rows(nutri_diffs_simple,
+  nutri_diffs_simple2, nutri_diffs_full) %>%
+  mutate(
+    Model = factor(Model,
+      levels = c("Main Model", "Model A1", "Model A2")))
+
+gg_diffs_comp <- ggplot(nutri_diffs_comp, aes(x=intmid)) +
+  geom_hline(yintercept = 0, lty=1, col="grey80") +
+  geom_line(aes(y=fit, lty = Model, col = Model), lwd=1) +
+  geom_ribbon(data = filter(nutri_diffs_comp, Model == "Main Model"),
+    aes(ymin=lo, ymax=hi), alpha = 0.2) +
+  facet_wrap(~label, nrow=2) +
+  scale_y_continuous(
+    breaks = log(sy <- c(0.25, 0.5, 0.75, 1, 1.25, 2, 4)),
+    labels = sy,
+    limits = c(-1.5, 1.5)) +
+  scale_x_continuous(breaks = c(4, 10, 20, 30)) +
+  ylab(expression(e[j])) +
+  xlab(expression(t))+
+  # Add Comparison info
+  geom_text(
+    dat = data.frame(
+      x          = 10,
+      y          = 1.3,
+      label      = unique(nutri_diffs_simple$label),
+      comparison = unique(nutri_diffs_simple$comparison)),
+    aes(x=x, y=y, label=comparison), size=5) +
+  theme(legend.position="bottom") +
+  theme(
+    axis.text    = element_text(size = rel(1.2)),
+    axis.title   = element_text(size = rel(1)),
+    title        = element_text(size = rel(1.3)),
+    legend.title = element_text(size = rel(1)),
+    legend.text  = element_text(size = rel(1.3)),
+    strip.text   = element_text(size = rel(1.1)))
+
+ggsave("main_comparison.jpg", gg_diffs_comp, width=9, height=6.5)
+ggsave("main_comparison.pdf", gg_diffs_comp, width=9, height=6.5)
+
+rm(mod_simple, mod_simple2, mod_no_nutri, mod.full.expert.t1)
+gc()

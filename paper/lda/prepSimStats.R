@@ -7,6 +7,7 @@ theme_set(theme_bw()) # sets default ggplot graphics theme to black/white
 library(BatchExperiments) # contains functions to extract information from registry containing simulation results
 library(reshape2) # transform data sets to ggplot2 exploitable format
 library(dplyr) # general purpose data manipulation
+dir.create("simulation")
 
 ## data sets
 # comparisonsList.Rds is created in "../../simulation/modelEvaluation/runSimEval.R"
@@ -396,13 +397,13 @@ dev.off()
 library(batchtools)
 reg_dlnm <- loadRegistry("../../simulation/comparison/dlnm-tv-surv-registry/")
 
-#### DLNM for survival data estimated by PAM
-id_pam_ped <- findExperiments(prob.name="dlnm_sim_ped", algo.name="pam_dlnm_ped")
-res_pam_ped <- reduceResultsDataTable(ids=findDone(id_pam_ped[,1])) %>%
+#### PAM WCE fitted on DLNM PED
+id_pam_wce_dlnm <- findExperiments(prob.name="dlnm_sim_ped", algo.name="pam_wce_ped")
+res_pam_wce_dlnm <- reduceResultsDataTable(ids=findDone(id_pam_wce_dlnm[,1])) %>%
   as_tibble() %>%
   tidyr::unnest()
 
-stats_pam_ped <- res_pam_ped %>%
+stats_pam_wce_dlnm <- res_pam_wce_dlnm %>%
   mutate(
     mse = (fit-truth)^2,
     coverage = (truth <= fit + qnorm(0.975)*se) &
@@ -414,25 +415,160 @@ stats_pam_ped <- res_pam_ped %>%
   dplyr::summarize(
     RMSE = mean(RMSE),
     coverage = mean(coverage))
-saveRDS(stats_pam_ped, "simulation/simstats_pam_dlnm.Rds")
+saveRDS(stats_pam_wce_dlnm, "simulation/simstats_pam_dlnm.Rds")
 
-av_pam_ped <- res_pam_ped %>%
+av_pam_wce_dlnm <- res_pam_wce_dlnm %>%
   group_by(x, lag2) %>%
   summarize_at(vars(fit, truth), mean ) %>%
   arrange(x, lag2) %>%
   tidyr::gather(type, value, fit:truth)%>%
   mutate(type = case_when(
-    type == "fit" ~ "PAM",
+    type == "fit" ~ "PAM (WCE)",
     TRUE ~ "TRUTH"))
 
 
-gg_av_pam_ped <- ggplot(av_pam_ped, aes(x=x, y=lag2, fill=value)) +
+gg_av_pam_wce_dlnm <- ggplot(av_pam_wce_dlnm, aes(x=x, y=lag2, fill=value)) +
   geom_tile() +
   geom_contour(aes(z=value), col="grey70") +
   scale_fill_gradient2(
     name = expression(h(t-t[e], z(t[e]))),
-    low="firebrick", high="steelblue") +
+    low="steelblue", high="firebrick") +
   facet_wrap(~type) +
+  ylab(expression(t-t[e])) + xlab(expression(z(t[e]))) +
+  theme(
+    axis.title   = element_text(size = rel(1.4)),
+    axis.text    = element_text(size = rel(1.3)),
+    legend.text  = element_text(size = rel(1.2)),
+    legend.title = element_text(size = rel(1.3)),
+    strip.text   = element_text(size = rel(1.3)))
+
+ggsave("simulation/pam_wce_dlnm.jpg", gg_av_pam_wce_dlnm, device="jpeg", width=7, height=4)
+ggsave("simulation/pam_wce_dlnm.pdf", gg_av_pam_wce_dlnm, device="pdf", width=7, height=4)
+
+
+#### PAM DLNM fitted on DLNM PED
+id_pam_dlnm_dlnm <- findExperiments(prob.name="dlnm_sim_ped", algo.name="pam_dlnm_ped")
+res_pam_dlnm_dlnm <- reduceResultsDataTable(ids=findDone(id_pam_dlnm_dlnm[,1])) %>%
+  as_tibble() %>%
+  tidyr::unnest()
+
+stats_pam_dlnm_dlnm <- res_pam_dlnm_dlnm %>%
+  mutate(
+    mse = (fit-truth)^2,
+    coverage = (truth <= fit + qnorm(0.975)*se) &
+    (truth >= fit - qnorm(0.975)*se)) %>%
+  group_by(job.id) %>%
+  dplyr::summarize(
+    RMSE = sqrt(mean(mse)),
+    coverage = sum(coverage)/n()) %>%
+  dplyr::summarize(
+    RMSE = mean(RMSE),
+    coverage = mean(coverage))
+saveRDS(stats_pam_dlnm_dlnm, "simulation/simstats_pam_dlnm_dlnm.Rds")
+
+av_pam_dlnm_dlnm <- res_pam_dlnm_dlnm %>%
+  group_by(x, lag2) %>%
+  summarize_at(vars(fit, truth), mean ) %>%
+  arrange(x, lag2) %>%
+  tidyr::gather(type, value, fit:truth)%>%
+  mutate(type = case_when(
+    type == "fit" ~ "PAM (DLNM)",
+    TRUE ~ "TRUTH"))
+
+
+gg_av_pam_dlnm_dlnm <- ggplot(av_pam_dlnm_dlnm, aes(x=x, y=lag2, fill=value)) +
+  geom_tile() +
+  geom_contour(aes(z=value), col="grey70") +
+  scale_fill_gradient2(
+    name = expression(h(t-t[e], z(t[e]))),
+    low="steelblue", high="firebrick") +
+  facet_wrap(~type) +
+  ylab(expression(t-t[e])) + xlab(expression(z(t[e]))) +
+  theme(
+    axis.title   = element_text(size = rel(1.4)),
+    axis.text    = element_text(size = rel(1.3)),
+    legend.text  = element_text(size = rel(1.3)),
+    legend.title = element_text(size = rel(1.3)),
+    strip.text   = element_text(size = rel(1.3)))
+
+ggsave("simulation/pam_dlnm_dlnm.jpg", gg_av_pam_dlnm_dlnm, device="jpeg", width=7, height=4)
+ggsave("simulation/pam_dlnm_dlnm.pdf", gg_av_pam_dlnm_dlnm, device="pdf", width=7, height=4)
+
+### combined figure PAM (WCE) and PAM (DLNM)
+av_pam_wce_dlnm_dlnm <- bind_rows(av_pam_dlnm_dlnm,
+  filter(av_pam_wce_dlnm, type!="TRUTH")) %>%
+  mutate(type = factor(type, levels = c("PAM (WCE)", "PAM (DLNM)", "TRUTH")))
+gg_av_pam_wce_dlnm_dlnm <- ggplot(av_pam_wce_dlnm_dlnm,
+    aes(x=x, y=lag2, fill=value)) +
+  geom_tile() +
+  geom_contour(aes(z=value), col="grey70") +
+  scale_fill_gradient2(
+    name = expression(h(t-t[e], z(t[e]))),
+    low="steelblue", high="firebrick") +
+  facet_wrap(~type) +
+  ylab(expression(t-t[e])) + xlab(expression(z(t[e]))) +
+  theme(
+    axis.title   = element_text(size = rel(1.4)),
+    axis.text    = element_text(size = rel(1.3)),
+    legend.text  = element_text(size = rel(1.3)),
+    legend.title = element_text(size = rel(1.4)),
+    strip.text   = element_text(size = rel(1.4))) +
+  ggtitle("Scenario (1)")
+
+
+ggsave("simulation/pam_wce_dlnm_dlnm.jpg", gg_av_pam_wce_dlnm_dlnm, device="jpeg", width=9, height=4)
+ggsave("simulation/pam_wce_dlnm_dlnm.pdf", gg_av_pam_wce_dlnm_dlnm, device="pdf", width=9, height=4)
+
+
+
+
+########################(time-varying) "complex" DLNM ##########################
+reg_dlnm <- loadRegistry("../../simulation/comparison/dlnm-tv-surv-registry/")
+
+#### PAM DLNM fit on TV DLNM
+id_pam_dlnm_tvdlnm <- findExperiments(
+  prob.name="sim_dlnm_ped_tv",
+  algo.name="pam_dlnm_ped")
+res_pam_dlnm_tvdlnm <- reduceResultsDataTable(ids=findDone(id_pam_dlnm_tvdlnm[,1])) %>%
+  as_tibble() %>%
+  tidyr::unnest()
+
+av_pam_dlnm_tvdlnm <- res_pam_dlnm_tvdlnm %>%
+  group_by(x, lag2, time_df) %>%
+  summarize_at(vars(fit, truth), mean ) %>%
+  arrange(time_df)
+
+ stats_pam_ped <- res_pam_dlnm_tvdlnm %>%
+  mutate(
+    mse = (fit-truth)^2,
+    coverage = (truth <= (fit + qnorm(0.975)*se)) & (truth >= (fit - qnorm(0.975)*se))) %>%
+  group_by(job.id, time_df) %>%
+  summarize(
+    RMSE = sqrt(mean(mse)),
+    coverage = sum(coverage)/n()) %>%
+  group_by(job.id) %>%
+  summarize(
+    RMSE = mean(RMSE),
+    coverage = mean(coverage)) %>%
+  summarize(
+    RMSE = mean(RMSE),
+    coverage = mean(coverage))
+saveRDS(stats_pam_ped, "simulation/stats_pam_dlnm_tvdlnm.Rds")
+
+av_pam_dlnm_tvdlnm_sub <- filter(av_pam_dlnm_tvdlnm, time_df %in% c(1, 20, 40)) %>%
+  tidyr::gather(type, value, fit, truth) %>%
+  mutate(type = case_when(
+    type == "fit" ~ "PAM (DLNM)",
+    TRUE ~ "TRUTH"))
+
+gg_pam_dlnm_tvdlnm <- ggplot(av_pam_dlnm_tvdlnm_sub, aes(x=x, y=lag2)) +
+  geom_tile(aes(fill=value)) +
+  geom_contour(aes(z = value), col="grey70") +
+  scale_fill_gradient2(
+    name = expression(h(t-t[e],z(t[e]))),
+    low="steelblue", high="firebrick") +
+  facet_grid(time_df ~ type,
+    labeller=labeller(time_df = function(x) paste0("t = ", x))) +
   ylab(expression(t-t[e])) + xlab(expression(z(t[e]))) +
   theme(
     axis.title   = element_text(size = rel(1.3)),
@@ -441,29 +577,44 @@ gg_av_pam_ped <- ggplot(av_pam_ped, aes(x=x, y=lag2, fill=value)) +
     legend.title = element_text(size = rel(1.3)),
     strip.text   = element_text(size = rel(1.3)))
 
-ggsave("simulation/dlnm_ped.jpg", gg_av_pam_ped, device="jpeg", width=7, height=4)
-ggsave("simulation/dlnm_ped.pdf", gg_av_pam_ped, device="pdf", width=7, height=4)
+ggsave("simulation/pam_dlnm_tvdlnm.pdf", gg_pam_dlnm_tvdlnm, width=8, height=10)
+ggsave("simulation/pam_dlnm_tvdlnm.jpg", gg_pam_dlnm_tvdlnm, width=8, height=10)
 
 
-########################(time-varying) "complex" DLNM ##########################
-reg_dlnm <- loadRegistry("../../simulation/comparison/dlnm-tv-surv-registry/")
-#### time-varying DLNM for survival data estimated by PAM
-id_pam_dlnm_ped_tv <- findExperiments(
+#### PAM TV DLNM fit on TV DLNM
+id_pam_tvdlnm_tvdlnm <- findExperiments(
   prob.name="sim_dlnm_ped_tv",
   algo.name="pam_dlnm_ped_tv")
-res_pam_dlnm_ped_tv <- reduceResultsDataTable(ids=findDone(id_pam_dlnm_ped_tv[,1])) %>%
+res_pam_tvdlnm_tvdlnm <- reduceResultsDataTable(ids=findDone(id_pam_tvdlnm_tvdlnm[,1])) %>%
   as_tibble() %>%
   tidyr::unnest()
 
-av_tv <- res_pam_dlnm_ped_tv %>%
+av_tv <- res_pam_tvdlnm_tvdlnm %>%
   group_by(x, lag2, time_df) %>%
   summarize_at(vars(fit, truth), mean ) %>%
   arrange(time_df)
 
+ stats_pam_ped_tv <- res_pam_tvdlnm_tvdlnm %>%
+  mutate(
+    mse = (fit-truth)^2,
+    coverage = (truth <= (fit + qnorm(0.975)*se)) & (truth >= (fit - qnorm(0.975)*se))) %>%
+  group_by(job.id, time_df) %>%
+  summarize(
+    RMSE = sqrt(mean(mse)),
+    coverage = sum(coverage)/n()) %>%
+  group_by(job.id) %>%
+  summarize(
+    RMSE = mean(RMSE),
+    coverage = mean(coverage)) %>%
+  summarize(
+    RMSE = mean(RMSE),
+    coverage = mean(coverage))
+saveRDS(stats_pam_ped_tv, "simulation/stats_pam_tvdlnm_tvdlnm.Rds")
+
 av_tv_sub <- filter(av_tv, time_df %in% c(1, 20, 40)) %>%
   tidyr::gather(type, value, fit, truth) %>%
   mutate(type = case_when(
-    type == "fit" ~ "PAM",
+    type == "fit" ~ "PAM (TV DLNM)",
     TRUE ~ "TRUTH"))
 
 gg_av_tv <- ggplot(av_tv_sub, aes(x=x, y=lag2)) +
@@ -471,8 +622,9 @@ gg_av_tv <- ggplot(av_tv_sub, aes(x=x, y=lag2)) +
   geom_contour(aes(z = value), col="grey70") +
   scale_fill_gradient2(
     name = expression(h(t-t[e],z(t[e]))),
-    low="firebrick", high="steelblue") +
-  facet_grid(time_df ~ type) +
+    low="steelblue", high="firebrick") +
+  facet_grid(time_df ~ type,
+    labeller=labeller(time_df = function(x) paste0("t = ", x))) +
   ylab(expression(t-t[e])) + xlab(expression(z(t[e]))) +
   theme(
     axis.title   = element_text(size = rel(1.3)),
@@ -481,7 +633,28 @@ gg_av_tv <- ggplot(av_tv_sub, aes(x=x, y=lag2)) +
     legend.title = element_text(size = rel(1.3)),
     strip.text   = element_text(size = rel(1.3)))
 
-ggsave("simulation/dlnm_ped_tv.pdf", gg_av_tv, width=8, height=10)
+ggsave("simulation/pam_tvdlnm_tvdlnm.pdf", gg_av_tv, width=8, height=10)
+ggsave("simulation/pam_tvdlnm_tvdlnm.jpg", gg_av_tv, width=8, height=10)
+
+## horizontal :
+gg_av_tv_horiz <- ggplot(av_tv_sub, aes(x=x, y=lag2)) +
+  geom_tile(aes(fill=value)) +
+  geom_contour(aes(z = value), col="grey70") +
+  scale_fill_gradient2(
+    name = expression(h(t-t[e],z(t[e]))),
+    low="steelblue", high="firebrick") +
+  facet_grid(type ~ time_df,
+    labeller=labeller(time_df = function(x) paste0("t = ", x))) +
+  ylab(expression(t-t[e])) + xlab(expression(z(t[e]))) +
+  theme(
+    axis.title   = element_text(size = rel(1.3)),
+    axis.text    = element_text(size = rel(1.2)),
+    legend.text  = element_text(size = rel(1.2)),
+    legend.title = element_text(size = rel(1.3)),
+    strip.text   = element_text(size = rel(1.3)))
+
+ggsave("../../paper/lda/simulation/pam_tvdlnm_tvdlnm_horiz.pdf", gg_av_tv_horiz, width=10, height=8)
+ggsave("../../paper/lda/simulation/pam_tvdlnm_tvdlnm_horiz.jpg", gg_av_tv_horiz, width=10, height=8)
 
 #### create animation
 anim_df <- av_tv %>%
@@ -518,3 +691,47 @@ gg_3d <- ggplot(anim_df, aes(x=x, y=lag2, fill=value, z=value, frame=time2)) +
 # library(gganimate)
 # gganimate(gg_3d, "simulation/fit-vs-truth-ped.gif",
 #   interval=0.3, ani.width=700, height=300)
+
+
+#### combined figure PAM DlNM + PAM TV DLNM fit on TV DLNM
+av_tv_comb <- bind_rows(av_tv_sub,
+  filter(av_pam_dlnm_tvdlnm_sub, type != "TRUTH"))
+
+gg_av_comb <- ggplot(av_tv_comb, aes(x=x, y=lag2)) +
+  geom_tile(aes(fill=value)) +
+  geom_contour(aes(z = value), col="grey70") +
+  scale_fill_gradient2(
+    name = expression(h(t-t[e],z(t[e]))),
+    low="steelblue", high="firebrick") +
+  facet_grid(time_df ~ type,
+    labeller=labeller(time_df = function(x) paste0("t = ", x))) +
+  ylab(expression(t-t[e])) + xlab(expression(z(t[e]))) +
+  theme(
+    axis.title   = element_text(size = rel(1.3)),
+    axis.text    = element_text(size = rel(1.2)),
+    legend.text  = element_text(size = rel(1.2)),
+    legend.title = element_text(size = rel(1.3)),
+    strip.text   = element_text(size = rel(1.3))) +
+  ggtitle("Scenario (2)")
+
+gg_av_comb_horiz <- gg_av_comb +
+  facet_grid(type ~ time_df,
+    labeller=labeller(time_df = function(x) paste0("t = ", x)))
+
+ggsave("simulation/pam_dlnm_tvdlnm_tvdlnm.pdf", gg_av_comb, width=9, height=12)
+ggsave("simulation/pam_dlnm_tvdlnm_tvdlnm.jpg", gg_av_comb, width=9, height=12)
+ggsave("simulation/pam_dlnm_tvdlnm_tvdlnm_horiz.pdf", gg_av_comb_horiz, width=12, height=9)
+ggsave("simulation/pam_dlnm_tvdlnm_tvdlnm_horiz.jpg", gg_av_comb_horiz, width=12, height=9)
+
+## combinde Scenario (1) and Scenario (2)
+library(grid)
+library(gridExtra)
+pdf("simulation/pam_dlnm_tvdlnm_tvdlnm_comb.pdf", width = 9, height = 12)
+grid.arrange(gg_av_pam_wce_dlnm_dlnm, gg_av_comb, nrow = 2,
+  heights = c(25, 60))
+dev.off()
+
+jpeg("simulation/pam_dlnm_tvdlnm_tvdlnm_comb.jpg", width = 900, height = 1200)
+grid.arrange(gg_av_pam_wce_dlnm_dlnm, gg_av_comb, nrow = 2,
+  heights = c(25, 60))
+dev.off()

@@ -1,16 +1,16 @@
 Package: elrapack
 Title: Functions to reproduce analyses in Bender et. al (2017)
-Version: 0.0.2
+Version: 0.0.3
 Authors@R: c(
     person("Andreas", "Bender", , "andreas.bender@stat.uni-muenchen.de", role = c("aut", "cre")),
     person("Fabian", "Scheipl", , "fabian.scheipl@stat.uni-muenchen.de", role = c("aut")))
-Description: This package is not for general use in statistical analyses, but rather
-	a collection of functions to reproduce analyses in Bender et. al (2017).
+Description: This is not for general use, but rather
+	a collection of functions to reproduce analyses in Bender et. al (2018).
 	It's just simpler to collect and document these functions using the R-package
 	infrastructure. Variable names etc. are often hard coded in the function bodys,
 	therefore, these functions should not be used outside of reproduction of
-	the results and simulation in Bender et. al (2017). See
-	https://github.com/adibender/pamm for a package for piece-wise exponential
+	the results and simulation in Bender et. al (2018). See
+	https://github.com/adibender/pammtools for a package for piece-wise exponential
 	additive models.
 Depends: R (>= 3.4.1)
 Imports:
@@ -34,7 +34,8 @@ Imports:
 	ggplot2,
 	grid,
 	gridExtra,
-	knitr
+	knitr,
+	modelr
 License: GPL-2
 Encoding: UTF-8
 LazyData: true

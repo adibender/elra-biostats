@@ -5,11 +5,12 @@
 Rerunning the analysis involves 4 steps:
 
 1. Preprocess raw data and create data in piece-wise exponential format
-2. Estimate models (main and sensitivity)
+2. Estimate models (main and sensitivity) + run alternative models
+with cumulative measures of nutrition (added at review stage)
 3. Rerun simulation analysis
+    - Simulation Part B is independent of the application and could
+    be run "in a vacuum"
     - For Simulation Part A the previous two steps are necessary
-    - Simulation Part B is indipendent of the application and could
-  be run "in a vacuum"
 4. Recreate Graphs and Tables used in the publication (assumes that
 all previous steps ran without errors)
 
@@ -18,44 +19,58 @@ To perform these steps in one, run the code below (your working directory should
 source("rerun-analyses.R")
 ```
 
-This will perform steps 1-4 described above
+This will perform steps 1-4 described above.
 
 **Remark on runtime/memory**: The complexity of the model is very high (many parameters + penalization) and the data sets are also very large (~10k subject + data splitting). Therefore, to run the code (especially simulation studies), we recommend running the code on a server or a very powerful desktop. On our servers, we were able to rerun the entire analysis within 2 days.
 
 ### Prerequisites
 
 - For parallel computations we use `mclapply` from the **`parallel`** package
-(which doesn't work on windows machines). In case this is a problem u can
-replace the offending lines with `lapply` (and also remove the `mc.cores` argument), however, this could greatly increase computation time.
+(which doesn't work on windows machines). When you execute the code on a
+windows machine, `mclapply` will probably fall back to the default
+`mc.cores=1` and thus code will still run, but computation time will
+be increased greatly.
 
-- For parallel processing of model fits and simulation runs we use
+
+- For parallel processing of model fits and simulation runs of Part B we use
 the **`BatchJobs`** and **`BatchExperiments`** packages (Bischl et al.
 https://www.jstatsoft.org/article/view/v064i11).
-For Simulation Part B we use the successor package `batchtools`
+For Simulation Part A we use the successor package **`batchtools`**
 (https://github.com/mllg/batchtools).
 
-- To use them it is necessary to setup your parallel execution environment (see files `BatchJobs.R` (server) and `BatchJobsLocal.R` (local) for examples). Setting `max.jobs=1` in `BatchJobsLocal.R` will run code sequentially, which might take a while, especially for simulation rerun.
+- To use them it is necessary to setup your parallel execution environment (see
+files `BatchJobs.R` (server) and `BatchJobsLocal.R` (local) for examples).
+Setting `max.jobs=1` in `BatchJobsLocal.R` will run code sequentially, which
+might take a while, especially for a full simulation rerun.
 Under Linux, make sure that you have execution privileges for the scripts in
-`<your R library>/BatchJobs/bin/linux-helper`
+`<your R library>/BatchJobs/bin/linux-helper`.
+Note: If you only want to check, whether all of the above runs as expected,
+but don't want to fully replicate all simulations, reduce `n_simA` and
+`n_simB` in `rerun-analyses.R`.
 
 
 ### Additional Notes
 
-- Simulation Study Part A was designed to closely resemble the application example, thus most code is hard coded (including functions in `elrapack`) and
-will not be of much use for general settings.
+- Simulation Study Part A (`simulation/comparison/`) is much more general and
+could be of interest for researchers interested in replicating/reusing the data structure and simulation (for example to test extensions of the method, etc.)
 
-- Simulation Study Part B (`simulation/comparison/') is much more general and could be of interest for researchers interested in replicating/reusing the data structure and simulation (for example to test extensions of the method, etc.)
+- Simulation Study Part B was designed to closely resemble the application
+example, thus most code is hard coded (including functions in `elrapack`) and
+will not be of much use for general settings.
 
 - We currently develop an R package that facilitates working with PAMMs, including data preparation, visualization, etc.. There are also a lot of vignettes with application examples: [pamm](!http://github.com/adibender/pamm)
 
 ### Folder structure
-- **`data`**: Raw data for the application example
+- **`data`**: Raw data for the application example (after initial import
+from SAS and minor preprocessing)
 - **`dataGenerationScripts`**: Contains scripts for (further) data preprocessing. Creates folder **`dataCurrent`** and **`dataCurrentHosp`** (storing data for main and sensitivity analysis, respectively).
 Run `dataImportFromSAStoCleaned.R` to process all data processing steps
-- **`elrapack`: A minimal R-package containing helper functions for data preparation/evaluation and simulation. This package is not meant to be broadly used, but rather a convenience package for storing helper functions (will be installed locally at the beginning of the `rerun-analyses.R` script).
-- **`paper`: Contains Scripts that produce tables and figures used in the
+- **`elrapack`**: A minimal R-package containing helper functions for data
+preparation/evaluation and simulation. This package is not meant to be broadly used, but rather a convenience package for storing helper functions (will be installed locally at the beginning of the `rerun-analyses.R` script).
+- **`paper`**: Contains Scripts that produce tables and figures used in the
 publication.
-- **`runModelBatchJobs`: Contains scripts to rerun main and sensitivity analysis of the application example
+- **`runModelBatchJobs`**: Contains scripts to rerun main and sensitivity
+analyses of the application example
 - **`simulation`**: Scripts to rerun simulation studies
     - **`modelEvaluation`**: Scripts to rerun *Simulation Part A*
     - **`comparison`**: Scripts to rerun *Simulation Part B*
@@ -164,7 +179,7 @@ devtools::session_info()
 ## digest             0.6.12     2017-01-27 CRAN (R 3.5.0)
 ## dlnm             * 2.3.2      2017-01-16 CRAN (R 3.5.0)
 ## dplyr            * 0.7.3      2017-09-09 CRAN (R 3.5.0)
-## elrapack         * 0.0.2      2017-09-13 local (@0.0.2)
+## elrapack         * 0.0.3      2017-09-13 local (@0.0.3)
 ## expm               0.999-2    2017-03-29 CRAN (R 3.5.0)
 ## fail               1.3        2015-10-01 CRAN (R 3.5.0)
 ## foreign            0.8-69     2017-06-22 CRAN (R 3.5.0)
@@ -199,7 +214,7 @@ devtools::session_info()
 ## mvtnorm            1.0-6      2017-03-02 CRAN (R 3.5.0)
 ## nlme             * 3.1-131    2017-02-06 CRAN (R 3.5.0)
 ## nnet               7.3-12     2016-02-02 CRAN (R 3.5.0)
-## pam              * 0.0.776    2017-09-07 Github (adibender/pam@5111735)
+## pammtools        * 0.0.3.2    2017-09-07 Github (adibender/pammtools@2f5a6d0)
 ## parallel         * 3.5.0      2017-09-07 local
 ## pkgconfig          2.0.1      2017-03-21 CRAN (R 3.5.0)
 ## plyr               1.8.4      2016-06-08 CRAN (R 3.5.0)
@@ -232,7 +247,3 @@ devtools::session_info()
 ## withr              2.0.0      2017-07-28 CRAN (R 3.5.0)
 ## zoo                1.8-0      2017-04-12 CRAN (R 3.5.0)
 ```
-
-
-
-

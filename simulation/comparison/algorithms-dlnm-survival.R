@@ -43,6 +43,44 @@ dlnm_dlnm_ped <- function(
 
 }
 
+#### PAM WCE algorithm
+pam_wce_ped <- function(
+	job,
+	data,
+	instance,
+	cen   = 5,
+	debug = FALSE) {
+
+	require(mgcv)
+	require(dplyr)
+
+	mod <- gam(
+		ped_status ~ s(tend, k=6) + s(te_df, by=Z*LL, k=9),
+		data=instance, family=poisson(), offset=offset, control = list(trace=TRUE))
+
+	ndf    <- ndf2 <- data$ndf
+	ndf2$Z <- cen
+	X1     <- predict(mod, newdata=ndf, type="lpmatrix")[, -1]
+	X      <- X1
+	X2     <- predict(mod, newdata=ndf2, type="lpmatrix")[, -1]
+	X      <- X1 - X2
+	ndf    <- ndf %>% select(Z, te_df, LL, everything())
+	colnames(ndf)[1:3] <- c("x", "lag", "LL")
+	ndf$fit <- as.numeric(X %*% coef(mod)[-1])
+	ndf$se  <- sqrt(rowSums((X %*% mod$Vp[-1,-1]) * X))
+	ndf     <- ndf %>%  mutate(
+		lag2 = lag,
+		lag  = paste0("lag", lag))
+
+	gc()
+
+	if(debug) {
+		return(list(mod = mod, ndf=ndf))
+	} else {
+		return(ndf)
+	}
+
+}
 
 
 pam_dlnm_ped <- function(
