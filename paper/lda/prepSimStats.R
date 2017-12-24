@@ -409,17 +409,17 @@ stats_pam_wce_dlnm <- res_pam_wce_dlnm %>%
     coverage = (truth <= fit + qnorm(0.975)*se) &
     (truth >= fit - qnorm(0.975)*se)) %>%
   group_by(job.id) %>%
-  dplyr::summarize(
+  summarise(
     RMSE = sqrt(mean(mse)),
     coverage = sum(coverage)/n()) %>%
-  dplyr::summarize(
+  summarise(
     RMSE = mean(RMSE),
     coverage = mean(coverage))
 saveRDS(stats_pam_wce_dlnm, "simulation/simstats_pam_dlnm.Rds")
 
 av_pam_wce_dlnm <- res_pam_wce_dlnm %>%
   group_by(x, lag2) %>%
-  summarize_at(vars(fit, truth), mean ) %>%
+  summarise_at(vars(fit, truth), mean ) %>%
   arrange(x, lag2) %>%
   tidyr::gather(type, value, fit:truth)%>%
   mutate(type = case_when(
@@ -458,17 +458,17 @@ stats_pam_dlnm_dlnm <- res_pam_dlnm_dlnm %>%
     coverage = (truth <= fit + qnorm(0.975)*se) &
     (truth >= fit - qnorm(0.975)*se)) %>%
   group_by(job.id) %>%
-  dplyr::summarize(
+  summarise(
     RMSE = sqrt(mean(mse)),
     coverage = sum(coverage)/n()) %>%
-  dplyr::summarize(
+  summarise(
     RMSE = mean(RMSE),
     coverage = mean(coverage))
 saveRDS(stats_pam_dlnm_dlnm, "simulation/simstats_pam_dlnm_dlnm.Rds")
 
 av_pam_dlnm_dlnm <- res_pam_dlnm_dlnm %>%
   group_by(x, lag2) %>%
-  summarize_at(vars(fit, truth), mean ) %>%
+  summarise_at(vars(fit, truth), mean ) %>%
   arrange(x, lag2) %>%
   tidyr::gather(type, value, fit:truth)%>%
   mutate(type = case_when(
@@ -535,7 +535,7 @@ res_pam_dlnm_tvdlnm <- reduceResultsDataTable(ids=findDone(id_pam_dlnm_tvdlnm[,1
 
 av_pam_dlnm_tvdlnm <- res_pam_dlnm_tvdlnm %>%
   group_by(x, lag2, time_df) %>%
-  summarize_at(vars(fit, truth), mean ) %>%
+  summarise_at(vars(fit, truth), mean ) %>%
   arrange(time_df)
 
  stats_pam_ped <- res_pam_dlnm_tvdlnm %>%
@@ -543,14 +543,14 @@ av_pam_dlnm_tvdlnm <- res_pam_dlnm_tvdlnm %>%
     mse = (fit-truth)^2,
     coverage = (truth <= (fit + qnorm(0.975)*se)) & (truth >= (fit - qnorm(0.975)*se))) %>%
   group_by(job.id, time_df) %>%
-  summarize(
+  summarise(
     RMSE = sqrt(mean(mse)),
     coverage = sum(coverage)/n()) %>%
   group_by(job.id) %>%
-  summarize(
+  summarise(
     RMSE = mean(RMSE),
     coverage = mean(coverage)) %>%
-  summarize(
+  summarise(
     RMSE = mean(RMSE),
     coverage = mean(coverage))
 saveRDS(stats_pam_ped, "simulation/stats_pam_dlnm_tvdlnm.Rds")
@@ -591,7 +591,7 @@ res_pam_tvdlnm_tvdlnm <- reduceResultsDataTable(ids=findDone(id_pam_tvdlnm_tvdln
 
 av_tv <- res_pam_tvdlnm_tvdlnm %>%
   group_by(x, lag2, time_df) %>%
-  summarize_at(vars(fit, truth), mean ) %>%
+  summarise_at(vars(fit, truth), mean ) %>%
   arrange(time_df)
 
  stats_pam_ped_tv <- res_pam_tvdlnm_tvdlnm %>%
@@ -599,14 +599,14 @@ av_tv <- res_pam_tvdlnm_tvdlnm %>%
     mse = (fit-truth)^2,
     coverage = (truth <= (fit + qnorm(0.975)*se)) & (truth >= (fit - qnorm(0.975)*se))) %>%
   group_by(job.id, time_df) %>%
-  summarize(
+  summarise(
     RMSE = sqrt(mean(mse)),
     coverage = sum(coverage)/n()) %>%
   group_by(job.id) %>%
-  summarize(
+  summarise(
     RMSE = mean(RMSE),
     coverage = mean(coverage)) %>%
-  summarize(
+  summarise(
     RMSE = mean(RMSE),
     coverage = mean(coverage))
 saveRDS(stats_pam_ped_tv, "simulation/stats_pam_tvdlnm_tvdlnm.Rds")
