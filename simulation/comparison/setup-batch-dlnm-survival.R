@@ -2,7 +2,7 @@ library(batchtools)
 
 reg <- makeExperimentRegistry(
 	"dlnm-tv-surv-registry",
-	packages = c("mgcv", "magrittr", "dplyr", "purrr", "pam", "dlnm", "ggplot2"),
+	packages = c("mgcv", "magrittr", "dplyr", "purrr", "pammtools", "dlnm", "ggplot2"),
 	source   = c("problems-dlnm-survival.R", "algorithms-dlnm-survival.R"),
 	seed     = 10072017)
 
@@ -18,16 +18,19 @@ addProblem(
 	fun  = sim_dlnm_ped)
 
 addAlgorithm(
+	name = "pam_wce_ped",
+	fun  = pam_wce_ped)
+
+addAlgorithm(
 	name = "pam_dlnm_ped",
-	fun = pam_dlnm_ped)
+	fun  = pam_dlnm_ped)
 
 addExperiments(
-	prob.designs = list(
-		dlnm_sim_ped = data.frame()),
+	prob.designs = list(dlnm_sim_ped = data.frame()),
 	algo.designs = list(
-		pam_dlnm_ped = data.frame(
-			debug = FALSE)),
-	repls = n_simB)
+		pam_wce_ped = data.frame(debug = FALSE),
+		pam_dlnm_ped = data.frame(debug = FALSE)),
+	repls = n_simA)
 
 
 #### time-varying DLNM for survival data
@@ -40,9 +43,8 @@ addAlgorithm(
 	fun = pam_dlnm_ped_tv)
 
 addExperiments(
-	prob.designs = list(
-		sim_dlnm_ped_tv = data.frame()),
+	prob.designs = list(sim_dlnm_ped_tv = data.frame()),
 	algo.designs = list(
-		pam_dlnm_ped_tv = data.frame(
-			debug = FALSE)),
-	repls = n_simB)
+		pam_dlnm_ped = data.frame(debug = FALSE),
+		pam_dlnm_ped_tv = data.frame(debug = FALSE)),
+	repls = n_simA)

@@ -34,7 +34,7 @@ id.fL460byt1t2L460 <- BatchExperiments::findExperiments(reg,
     algo.pars    = (form %in%
         c("Statict1", "Expertt1", "Expertt2", "Statict2")))
 
-BatchJobs::submitJobs(reg, ids=BatchJobs::findNotDone(reg, id.fL460byt1t2L460))
+BatchJobs::submitJobs(reg, ids=sample(BatchJobs::findNotDone(reg, id.fL460byt1t2L460), 20))
 BatchJobs::waitForJobs(reg)
 
 ## refit Expertt2 by Expertt1, Statict1, Expertt2, Statict2

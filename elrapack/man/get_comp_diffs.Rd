@@ -4,7 +4,8 @@
 \alias{get_comp_diffs}
 \title{get differences of effects on log hazard}
 \usage{
-get_comp_diffs(patients.list, protocols.df, protocols.to.compare, model)
+get_comp_diffs(patients.list, protocols.df, protocols.to.compare, model,
+  effectname = "AdequacyCals")
 }
 \description{
 get differences of effects on log hazard

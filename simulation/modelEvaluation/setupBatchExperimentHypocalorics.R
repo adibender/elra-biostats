@@ -46,7 +46,7 @@ gam.design.dataFromExpertt1 <- makeDesign(
 # add Experiment for Problem 1
 addExperiments(
     reg,
-   repls         = n_simA,
+    repls        = n_simB,
     prob.design  = dataFromExpertt1,
     algo.design  = list(gam.design.dataFromExpertt1),
     skip.defined = TRUE)
@@ -76,7 +76,7 @@ gam.design.dataFromL460t1 <- makeDesign(
 # ad Experiments for Problem 2:
 addExperiments(
     reg,
-   repls         = n_simA,
+    repls        = n_simB,
     prob.design  = dataFromL460t1.design,
     algo.design  = gam.design.dataFromL460t1,
     skip.defined = TRUE)
@@ -104,7 +104,7 @@ gam.design.dataFromExpertt2 <- makeDesign(
     exhaustive = list(form = names(static$formulas.list)[c(1, 2, 3, 4)]))
 addExperiments(
     reg,
-   repls         = n_simA,
+    repls        = n_simB,
     prob.design  = dataFromExpertt2.design,
     algo.design  = gam.design.dataFromExpertt2,
     skip.defined = TRUE)
@@ -139,7 +139,7 @@ gam.design.dataFromNoneNoneNone <- makeDesign(
             "Statict2")))
 addExperiments(
     reg,
-   repls         = n_simA,
+    repls        = n_simB,
     prob.design  = dataFromNoneNoneNone.design,
     algo.design  = gam.design.dataFromNoneNoneNone,
     skip.defined = TRUE)

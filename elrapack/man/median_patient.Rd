@@ -2,17 +2,12 @@
 % Please edit documentation in R/eval_mgcv_teststat.R
 \name{median_patient}
 \alias{median_patient}
-\alias{makeProtoPats}
 \title{Extract median covariate information from columns}
 \usage{
 median_patient(data, patient.vars = c("ApacheIIScore", "Age", "BMI", "Year",
   "DiagID2", "AdmCatID", "Gender", "freqInMVd2to4", "freqPFd2to4",
   "freqOId2to4", "freqPNd2to4"), random.effect = "CombinedicuID",
   re.byvar = "icuByDummy")
-
-makeProtoPats(ped, m, median.patient, which.patients = c("low", "mid", "full",
-  "switch"), effectname = "AdequacyCals", switchpattern = c(rep("low", 4),
-  rep("mid", 2), rep("full", 5)))
 }
 \description{
 Extract median covariate information from columns

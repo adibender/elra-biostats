@@ -7,8 +7,8 @@
 
 
 devtools::install("elrapack/")
-devtools::install_github("dgrtwo/gganimate")
-devtools::install_github("adibender/pam")
+# devtools::install_github("dgrtwo/gganimate")
+devtools::install_github("adibender/pammtools@v0.0.3.2")
 library(elrapack)
 library(parallel)
 
@@ -32,7 +32,7 @@ source("submitModelsGAMHosp.R"   , echo=TRUE)
 rm(list=ls())
 gc()
 
-## Simulation Part A
+## Simulation Part B
 # preparation
 setwd("../")
 source("protocols.R", echo=TRUE)
@@ -43,9 +43,9 @@ source("createCompleteData.R", echo=TRUE)
 source("createSettingParameters.R", echo=TRUE)
 # Actual simulation: # each job takes up to 5GB  of RAM
 # To reduce the run-time, set a lower number of replications (per sub-setting)
-n_simA <- 500 # (replication per setting, of which there are 16)
+n_simB <- 500 # (replication per setting, of which there are 16)
 # set to value below for full replication
-# n_simA <- 500
+# n_simB <- 500
 source("setupBatchExperimentHypocalorics.R", echo=TRUE)
 source("submitJobs.R", echo=TRUE)
 source("runSimEval.R", echo=TRUE)
@@ -53,7 +53,7 @@ source("runSimEval.R", echo=TRUE)
 rm(list=ls())
 gc()
 
-## Simulation Part B
+## Simulation Part A
 
 # Scenario (1): each Job takes up to 5GB of RAM
 # Scenario (2): each Job takes up to 10GB of RAM
@@ -61,9 +61,9 @@ gc()
 setwd("../comparison/")
 source("create-static-dlnm-survival.R", echo=TRUE)
 # To reduce run-time, set a lower number of replications (per scenario)
-n_simB <- 500
+n_simA <- 500
 # set to value below for full replication
-# n_simB <- 500
+# n_simA <- 500
 source("setup-batch-dlnm-survival.R", echo=TRUE)
 source("submit-jobs-dlnm-survival.R", echo=TRUE)
 rm(list=ls())

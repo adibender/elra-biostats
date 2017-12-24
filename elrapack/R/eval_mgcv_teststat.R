@@ -42,7 +42,8 @@ get_comp_diffs <- function(
   patients.list,
   protocols.df,
   protocols.to.compare,
-  model) {
+  model,
+  effectname = "AdequacyCals") {
 
   maxdays.tdc <- nrow(protocols.df)
 
@@ -56,7 +57,8 @@ get_comp_diffs <- function(
       getEffectDiffs(
         m=model,
         patients.list[[z[1]]],
-        patients.list[[z[2]]]))
+        patients.list[[z[2]]],
+        effectname = effectname))
   })
 
   names(effect.diffs) <- diff.labs
@@ -80,22 +82,14 @@ pattern_pat <- function(
   median.patient,
   effectname    = "AdequacyCals") {
 
-  gc <- grep("AdequacyCals", names(coef(m)), value = TRUE)
+  gc <- grep(effectname, names(coef(m)), value = TRUE)
 
-  if (length(gc) == 0) {
-    effectname = "ProtCat"
+  effectname <- sub(".*I\\(", "", gc)
+  effectname <- unique(sub("Tot.*", "", effectname))
 
-    low.var    <- paste0(effectname, "1")
-    mid.var    <- paste0(effectname, "2")
-    full.var   <- paste0(effectname, "3")
-  } else {
-    effectname <- sub(".*I\\(", "", gc)
-    effectname <- unique(sub("Tot.*", "", effectname))
-
-    low.var    <- paste0(effectname, "Tot0to30")
-    mid.var    <- paste0(effectname, "Tot30To70")
-    full.var   <- paste0(effectname, "TotAbove70")
-  }
+  low.var    <- paste0(effectname, "Tot0to30")
+  mid.var    <- paste0(effectname, "Tot30To70")
+  full.var   <- paste0(effectname, "TotAbove70")
 
   # pick a patient that remained under risk all the way to overwrite their data:
   protoPat <- {
@@ -109,17 +103,37 @@ pattern_pat <- function(
   }
 
   maxdays.tdc <- ncol(ped$DaysMat)
+  max_per_int <- rowSums(protoPat$LHartlDynf)
 
   stopifnot(length(pattern) == maxdays.tdc,
     all(pattern %in% c("low", "mid", "full")))
 
   # switch
-  protoPat[[low.var]]  <- outer(rep(1, nrow(protoPat)), pattern == "low")
-  protoPat[[mid.var]]  <- outer(rep(1, nrow(protoPat)), pattern == "mid")
-  protoPat[[full.var]] <- outer(rep(1, nrow(protoPat)), pattern == "full")
-
+  if(is.matrix(protoPat[[low.var]])) {
+    protoPat[[low.var]]  <- outer(rep(1, nrow(protoPat)), pattern == "low")
+    protoPat[[mid.var]]  <- outer(rep(1, nrow(protoPat)), pattern == "mid")
+    protoPat[[full.var]] <- outer(rep(1, nrow(protoPat)), pattern == "full")
+  } else {
+    if(effectname == "LLadequ") {
+        protoPat[[low.var]] <- c(0, (rowSums(outer(rep(1, nrow(protoPat)),
+          pattern == "low")*protoPat$LHartlDynf)/max_per_int)[-1])
+        protoPat[[mid.var]] <- c(0,(rowSums(outer(rep(1, nrow(protoPat)),
+          pattern == "mid")*protoPat$LHartlDynf)/max_per_int)[-1])
+        protoPat[[full.var]] <- c(0,(rowSums(outer(rep(1, nrow(protoPat)),
+          pattern == "full")*protoPat$LHartlDynf)/max_per_int)[-1])
+    } else {
+        CI   <- cumsum(pattern == "low")
+        CII  <- cumsum(pattern == "mid")
+        CIII <- cumsum(pattern == "full")
+        protoPat[[low.var]]  <- lag(c(CI, rep(CI[maxdays.tdc],
+          nrow(protoPat)-maxdays.tdc)), default = 0)
+        protoPat[[mid.var]]  <- lag(c(CII, rep(CII[maxdays.tdc],
+          nrow(protoPat)-maxdays.tdc)), default= 0)
+        protoPat[[full.var]]  <- lag(c(CIII, rep(CIII[maxdays.tdc],
+          nrow(protoPat)-maxdays.tdc)), default = 0)
+      }
+  }
   protoPat
-
 }
 
 #' Perform p-value calculation for difference between two hypothetical patients.
@@ -223,77 +237,5 @@ median_patient <- function(
 
     # return
     median.x
-
-}
-
-#' @rdname median_patient
-#' @keywords internal
-#' @export
-makeProtoPats <- function(
-  ped,
-  m,
-  median.patient,
-  which.patients = c("low", "mid", "full", "switch"),
-  effectname     = "AdequacyCals",
-  switchpattern  = c(rep("low", 4), rep("mid", 2), rep("full", 5))) {
-
-  gc <- grep("AdequacyCals", names(coef(m)), value = TRUE)
-
-  if (length(gc) == 0) {
-    effectname = "ProtCat"
-
-    low.var    <- paste0(effectname, "1")
-    mid.var    <- paste0(effectname, "2")
-    full.var   <- paste0(effectname, "3")
-  } else {
-    effectname <- sub(".*I\\(", "", gc)
-    effectname <- unique(sub("Tot.*", "", effectname))
-
-    low.var    <- paste0(effectname, "Tot0to30")
-    mid.var    <- paste0(effectname, "Tot30To70")
-    full.var   <- paste0(effectname, "TotAbove70")
-  }
-
-  # pick a patient that remained under risk all the way to overwrite their data:
-  protoPat <- {
-    ind <- which(ped$intmid > 58)[1]
-    id <- ped$CombinedID[ind]
-    subset(ped, CombinedID == id)
-  }
-  # overwrite with median data for confounders:
-  for(var in colnames(median.patient)){
-    protoPat[, var] <- median.patient[1, var]
-  }
-
-  pat0 <- patMid <- patFull <- patSwitch <- protoPat
-
-  maxdays.tdc <- ncol(ped$DaysMat)
-
-  stopifnot(length(switchpattern) == maxdays.tdc,
-    all(switchpattern %in% c("low", "mid", "full")))
-
-  ##
-  mat.full  <- matrix(1, nrow=nrow(protoPat), ncol=maxdays.tdc)
-  mat.empty <- matrix(0, nrow=nrow(protoPat), ncol= maxdays.tdc)
-
-
-  ## low
-  pat0[[low.var]] <- mat.full
-  pat0[[mid.var]] <- pat0[[full.var]] <- mat.empty
-  ## mid
-  patMid[[low.var]]  <- mat.empty
-  patMid[[mid.var]]  <- mat.full
-  patMid[[full.var]] <- mat.empty
-  ## full
-  patFull[[low.var]]  <- mat.empty
-  patFull[[mid.var]]  <- mat.empty
-  patFull[[full.var]] <- mat.full
-  # switch
-  patSwitch[[low.var]]  <- outer(rep(1, nrow(protoPat)), switchpattern == "low")
-  patSwitch[[mid.var]]  <- outer(rep(1, nrow(protoPat)), switchpattern == "mid")
-  patSwitch[[full.var]] <- outer(rep(1, nrow(protoPat)), switchpattern == "full")
-
-  # return
-  list("0"=pat0, Mid = patMid, Full = patFull, Switch = patSwitch)
 
 }
