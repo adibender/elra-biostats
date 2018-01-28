@@ -43,7 +43,7 @@ source("createCompleteData.R", echo=TRUE)
 source("createSettingParameters.R", echo=TRUE)
 # Actual simulation: # each job takes up to 5GB  of RAM
 # To reduce the run-time, set a lower number of replications (per sub-setting)
-n_simB <- 500 # (replication per setting, of which there are 16)
+n_simB <- 20 # (replication per setting, of which there are 16)
 # set to value below for full replication
 # n_simB <- 500
 source("setupBatchExperimentHypocalorics.R", echo=TRUE)
@@ -61,7 +61,7 @@ gc()
 setwd("../comparison/")
 source("create-static-dlnm-survival.R", echo=TRUE)
 # To reduce run-time, set a lower number of replications (per scenario)
-n_simA <- 500
+n_simA <- 20
 # set to value below for full replication
 # n_simA <- 500
 source("setup-batch-dlnm-survival.R", echo=TRUE)

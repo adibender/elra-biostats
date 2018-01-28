@@ -105,8 +105,8 @@ dev.off()
 
 ################################################################################
 ## nutrition effects for Comparisons A-F (main analysis)
-pdf("maint1.pdf", width=9, height=6)
-ggplot(nutri.diffs, aes(x=intmid)) +
+
+gg_maint1 <- ggplot(nutri.diffs, aes(x=intmid)) +
   geom_hline(yintercept = 0, lty=1, col="grey70") +
 	geom_line(aes(y=fit), lwd=1) +
 	geom_line(aes(y=value, group=type), lty=2, lwd=1) +
@@ -133,11 +133,12 @@ ggplot(nutri.diffs, aes(x=intmid)) +
     legend.title = element_text(size = rel(1)),
     legend.text  = element_text(size = rel(1.3)),
     strip.text   = element_text(size = rel(1.1)))
-dev.off()
+
+ggsave("maint1.pdf", gg_maint1, width = 9, height=6)
+ggsave("maint1.eps", gg_maint1, width = 9, height=6)
 
 ## nutrition effects for Comparisons A-F (sensitivity analysis)
-pdf("maint1sens.pdf", width=9, height=6)
-ggplot(nutri.diffs.sensitivity, aes(x=intmid)) +
+gg_maint1sens <- ggplot(nutri.diffs.sensitivity, aes(x=intmid)) +
   geom_hline(yintercept = 0, lty=1, col="grey70") +
 	geom_line(aes(y=fit), lwd=1) +
 	geom_line(aes(y=value, group=type), lty=2, lwd=1) +
@@ -165,7 +166,10 @@ ggplot(nutri.diffs.sensitivity, aes(x=intmid)) +
     legend.title = element_text(size = rel(1)),
     legend.text  = element_text(size = rel(1.3)),
     strip.text   = element_text(size = rel(1.1)))
-dev.off()
+
+ggsave("maint1sens.pdf", gg_maint1sens, width=9, height=6)
+ggsave("maint1sens.eps", gg_maint1sens, width=9, height=6)
+
 rm(mod.full.epxert.t1.sensitivity)
 gc()
 
@@ -216,6 +220,7 @@ elra_heat <- ggplot(tidy) +
     panel.grid.major = element_blank(),
     legend.position = "bottom")
 ggsave("ELRA_heatmaps.pdf", elra_heat, width = 10, height = 12)
+ggsave("ELRA_heatmaps.eps", elra_heat, width = 10, height = 12)
 ggsave("ELRA_heatmaps.jpg", elra_heat, width = 10, height = 12)
 
 tidy_fit <- filter(tidy, estimate == "estimate")
@@ -262,6 +267,80 @@ elra_heat_ex <- elra_heat_est+
 
 ggsave("elra_heat_ex.pdf", elra_heat_est, width = 10, height = 6.5)
 ggsave("elra_heat_ex.jpg", elra_heat_est, width = 10, height = 6.5)
+
+
+#### Figure point estimates with Lag-Lead window
+#### combined figure with lag-lead window
+tidy_est <- filter(tidy, estimate == "estimate")
+gg_elra_est <- ggplot(tidy_est) +
+  geom_tile(aes(x=te, y=-t, fill = value, col=value)) +
+  geom_contour(aes(x=te, y=-t, z =value), bins = 20,
+    colour = "gray70", lwd = .5) +
+  facet_wrap(~ C, nrow = 1) +
+  scale_colour_gradient2(na.value = 'grey90', guide = "none") +
+  scale_fill_gradient2(na.value = 'grey90',
+    name = expression("estimated "~tilde(h)(t, t[e]))) +
+  theme(panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank()) +
+  # coord_cartesian(xlim = c(1,11), ylim= -c(29.5, 4.5)) +
+  scale_x_continuous(breaks = 1:11, minor_breaks = NULL,
+    name = expression("Nutrition day "~t[e])) +
+  scale_y_continuous(breaks = -(4:29 + .5), minor_breaks = NULL,
+    name = "t",
+    labels = paste0("(",4:29, ",", 5:30, "]"),
+    sec.axis = dup_axis(name=""))
+
+
+# nutri        <- readRDS("../../dataCurrent/nutriOrigSmall.Rds")
+seq.ints     <- seq_along(unique(nutri$intmid))
+colindex     <- if(ncol(nutri$LHartlDynf)==12) -1 else 1:11
+## graphic titles
+dyn.title <- expression(
+  atop("Dynamic time window",
+    atop("lag = 4 days; lead = 4 + 2 x n days",
+      "(n = number of days in the ICU)")))
+static.title <- expression(atop("Static time window",
+  atop("lag = 4 days; lead = 30 days")))
+
+
+ ## hm: heat matrix containing the values to be ploted via heatmap()
+int.names <- unique(int_info(brks = c(0:30))$interval)
+ll_dyn <- reshape2::melt(nutri$LHartlDynf[seq.ints, colindex])
+ll_dyn$Var1 <- factor(ll_dyn$Var1, labels = int.names)
+ll_dyn$Var2 <- factor(ll_dyn$Var2, labels = 1:11)
+ll_dyn$type = "dynamic"
+
+ll_stat <- reshape2::melt(nutri$LSimple460f[seq.ints, colindex])
+ll_stat$Var1 <- factor(ll_stat$Var1, labels = int.names)
+ll_stat$Var2 <- factor(ll_stat$Var2, labels = 1:11)
+ll_stat$type = "static"
+
+ll <- bind_rows(ll_dyn, ll_stat)
+
+gg_dyn <- ggplot(ll_dyn, aes(x = Var2, y = rev(Var1))) +
+    geom_tile(aes(fill = value), color = "lightgrey") +
+    scale_fill_gradient(low = "whitesmoke", high = "grey20") +
+    xlab("Protocol day") +
+    scale_y_discrete("Interval j", labels = rev(int.names)) +
+    theme(legend.position = "none") +
+    ggtitle(dyn.title) +
+    xlab(expression(paste("Nutrition day ", t[e])))
+
+gg_stat <- ggplot(ll_stat, aes(x = Var2, y = rev(Var1))) +
+    geom_tile(aes(fill = value), color = "lightgrey") +
+    scale_fill_gradient(low = "whitesmoke", high = "grey20") +
+    xlab("Protocol day") +
+    scale_y_discrete("Interval j", labels = rev(int.names)) +
+    theme(legend.position = "none") +
+    ggtitle(static.title)  +
+    xlab(expression(paste("Nutrition day ", t[e])))
+
+library(cowplot)
+grd_ll <- gridExtra::grid.arrange(gg_dyn, gg_stat, nrow = 1)
+pl2 <- plot_grid(grd_ll, gg_elra_est, nrow = 2)
+ggsave("ELRA_heatmaps_LL.eps", pl2, width=9, height=12)
+ggsave("ELRA_heatmaps_LL.pdf", pl2, width=9, height=12)
+ggsave("ELRA_heatmaps_LL.jpg", pl2, width=9, height=12)
 
 ###################### model comparisons #######################################
 #### compare via apparent C-Index
