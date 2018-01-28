@@ -337,7 +337,7 @@ geom_line(aes(group=form.int, col=Penalty, lty=Lag), lwd=1.2) +
 
 
 pdf("simulation/simResAll.pdf", width=6, height=8)
-grid.draw(
+gg_simresall <- grid.arrange(
   rbind(
     ggplotGrob(gg.cov.agg),
     ggplotGrob(gg.rmse.agg),
@@ -719,19 +719,15 @@ gg_av_comb_horiz <- gg_av_comb +
     labeller=labeller(time_df = function(x) paste0("t = ", x)))
 
 ggsave("simulation/pam_dlnm_tvdlnm_tvdlnm.pdf", gg_av_comb, width=9, height=12)
+ggsave("simulation/pam_dlnm_tvdlnm_tvdlnm.eps", gg_av_comb, width=9, height=12)
 ggsave("simulation/pam_dlnm_tvdlnm_tvdlnm.jpg", gg_av_comb, width=9, height=12)
 ggsave("simulation/pam_dlnm_tvdlnm_tvdlnm_horiz.pdf", gg_av_comb_horiz, width=12, height=9)
 ggsave("simulation/pam_dlnm_tvdlnm_tvdlnm_horiz.jpg", gg_av_comb_horiz, width=12, height=9)
 
 ## combinde Scenario (1) and Scenario (2)
-library(grid)
-library(gridExtra)
-pdf("simulation/pam_dlnm_tvdlnm_tvdlnm_comb.pdf", width = 9, height = 12)
-grid.arrange(gg_av_pam_wce_dlnm_dlnm, gg_av_comb, nrow = 2,
-  heights = c(25, 60))
-dev.off()
+# library(grid)
+# library(gridExtra)
+gg_comb_tv <- grid.arrange(gg_av_pam_wce_dlnm_dlnm, gg_av_comb, nrow = 2, heights = c(25, 60))
 
-jpeg("simulation/pam_dlnm_tvdlnm_tvdlnm_comb.jpg", width = 900, height = 1200)
-grid.arrange(gg_av_pam_wce_dlnm_dlnm, gg_av_comb, nrow = 2,
-  heights = c(25, 60))
-dev.off()
+ggsave("simulation/pam_dlnm_tvdlnm_tvdlnm_comb.pdf", gg_comb_tv, width = 9, height = 12)
+ggsave("simulation/pam_dlnm_tvdlnm_tvdlnm_comb.eps", gg_comb_tv, width = 9, height = 12)
