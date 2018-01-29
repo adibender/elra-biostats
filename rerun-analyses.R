@@ -32,6 +32,11 @@ source("submitModelsGAMHosp.R"   , echo=TRUE)
 rm(list=ls())
 gc()
 
+## model comparison with simpler models based on cumulated covariates
+source("model-comparisons.R")
+rm(list = ls())
+gc()
+
 ## Simulation Part B
 # preparation
 setwd("../")
