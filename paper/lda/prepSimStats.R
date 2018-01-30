@@ -727,7 +727,10 @@ ggsave("simulation/pam_dlnm_tvdlnm_tvdlnm_horiz.jpg", gg_av_comb_horiz, width=12
 ## combinde Scenario (1) and Scenario (2)
 # library(grid)
 # library(gridExtra)
-gg_comb_tv <- grid.arrange(gg_av_pam_wce_dlnm_dlnm, gg_av_comb, nrow = 2, heights = c(25, 60))
 
-ggsave("simulation/pam_dlnm_tvdlnm_tvdlnm_comb.pdf", gg_comb_tv, width = 9, height = 12)
-ggsave("simulation/pam_dlnm_tvdlnm_tvdlnm_comb.eps", gg_comb_tv, width = 9, height = 12)
+ggsave("simulation/pam_dlnm_tvdlnm_tvdlnm_comb.pdf",
+  grid.arrange(gg_av_pam_wce_dlnm_dlnm, gg_av_comb, nrow = 2,
+    heights = c(25, 60)), width = 9, height = 12)
+ggsave("simulation/pam_dlnm_tvdlnm_tvdlnm_comb.eps",
+  grid.arrange(gg_av_pam_wce_dlnm_dlnm, gg_av_comb, nrow = 2,
+    heights = c(25, 60)), width = 9, height = 12)

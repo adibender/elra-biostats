@@ -68,39 +68,41 @@ apache <- data_frame(
 pd <- tidy_smooth(mod.full.expert.t1)
 re <- tidy_re(mod.full.expert.t1)
 
-p1 <- ggplot_gtable(ggplot_build(
+
+p1 <- ggplot_build(
   ggplot(baseline, aes(x = time, y = fit, ymin = lo, ymax = hi)) +
   geom_step() + geom_stepribbon(alpha = .2) + xlab("t") +
-  ylab(expression(log(hat(lambda)[0](t)))) + ggtitle("Log-Baseline:")))
-p2 <- ggplot_gtable(ggplot_build(
+  ylab(expression(log(hat(lambda)[0](t)))) + ggtitle("Log-Baseline:"))
+p2 <- ggplot_build(
   ggplot(apache, aes(x = time, y = fit, ymin = lo, ymax = hi)) +
   geom_step() + geom_stepribbon(alpha = .2) + xlab("t") +
   ylab(expression(hat(beta)[Apache](t))) +
   geom_hline(yintercept = 0, col="grey20", lty = 2) +
-  ggtitle("Time-varying coefficient for Apache II:")))
-p3 <- ggplot_gtable(ggplot_build(
+  ggtitle("Time-varying coefficient for Apache II:"))
+p3 <- ggplot_build(
   ggplot(re, aes(sample = fit)) +
   geom_abline(slope = re$qqslope[1], intercept = re$qqintercept[1]) +
   geom_qq() + xlab("N(0,1) quantiles") +
   ylab(expression("ICU effects "~hat(gamma)[l[i]])) +
-  ggtitle("QQ-Plot for ICU frailty:")))
-p4 <- ggplot_gtable(ggplot_build(
+  ggtitle("QQ-Plot for ICU frailty:"))
+p4 <- ggplot_build(
   ggplot(filter(pd, xlab == "Age"),
   aes(x = x, y = fit, ymin = low, ymax = high)) +
   geom_hline(yintercept = 0, col="grey20", lty = 2) +
   geom_line() + geom_ribbon(alpha = .2) +
   xlab("Age") + ylab(expression(hat(f)(Age))) +
-  ggtitle("Varying coefficient of age:")))
-p5 <- ggplot_gtable(ggplot_build(
+  ggtitle("Varying coefficient of age:"))
+p5 <- ggplot_build(
     ggplot(filter(pd, xlab == "BMI"),
   aes(x = x, y = fit, ymin = low, ymax = high)) +
   geom_hline(yintercept = 0, col="grey20", lty = 2) +
   geom_line() + geom_ribbon(alpha = .2) +
   xlab("BMI") +
-  ylab(expression(hat(f)(BMI))) + ggtitle("Varying coefficient of BMI:")))
+  ylab(expression(hat(f)(BMI))) + ggtitle("Varying coefficient of BMI:"))
 
 pdf("confoundert1.pdf", width=12, height=6)
-cowplot::plot_grid(p1, p2, p3, p4, p5, nrow=2)
+cowplot::plot_grid(ggplot_gtable(p1), ggplot_gtable(p2), ggplot_gtable(p3),
+  ggplot_gtable(p4), ggplot_gtable(p5), nrow=2)
 dev.off()
 
 ################################################################################
@@ -304,7 +306,7 @@ static.title <- expression(atop("Static time window",
 
 
  ## hm: heat matrix containing the values to be ploted via heatmap()
-int.names <- unique(int_info(brks = c(0:30))$interval)
+int.names <- unique(elrapack::int_info(brks = c(0:30))$interval)
 ll_dyn <- reshape2::melt(nutri$LHartlDynf[seq.ints, colindex])
 ll_dyn$Var1 <- factor(ll_dyn$Var1, labels = int.names)
 ll_dyn$Var2 <- factor(ll_dyn$Var2, labels = 1:11)
@@ -336,11 +338,9 @@ gg_stat <- ggplot(ll_stat, aes(x = Var2, y = rev(Var1))) +
     xlab(expression(paste("Nutrition day ", t[e])))
 
 library(cowplot)
-grd_ll <- gridExtra::grid.arrange(gg_dyn, gg_stat, nrow = 1)
-pl2 <- plot_grid(grd_ll, gg_elra_est, nrow = 2)
-ggsave("ELRA_heatmaps_LL.eps", pl2, width=9, height=12)
-ggsave("ELRA_heatmaps_LL.pdf", pl2, width=9, height=12)
-ggsave("ELRA_heatmaps_LL.jpg", pl2, width=9, height=12)
+ggsave("ELRA_heatmaps_LL.eps", plot_grid(gridExtra::grid.arrange(gg_dyn, gg_stat, nrow = 1), gg_elra_est, nrow = 2), width=9, height=12)
+ggsave("ELRA_heatmaps_LL.pdf", plot_grid(gridExtra::grid.arrange(gg_dyn, gg_stat, nrow = 1), gg_elra_est, nrow = 2), width=9, height=12)
+ggsave("ELRA_heatmaps_LL.jpg", plot_grid(gridExtra::grid.arrange(gg_dyn, gg_stat, nrow = 1), gg_elra_est, nrow = 2), width=9, height=12)
 
 ###################### model comparisons #######################################
 #### compare via apparent C-Index
