@@ -279,8 +279,8 @@ gg_elra_est <- ggplot(tidy_est) +
   geom_contour(aes(x=te, y=-t, z =value), bins = 20,
     colour = "gray70", lwd = .5) +
   facet_wrap(~ C, nrow = 1) +
-  scale_colour_gradient2(na.value = 'grey90', guide = "none") +
-  scale_fill_gradient2(na.value = 'grey90',
+  scale_colour_gradient2(na.value = 'white', guide = "none") +
+  scale_fill_gradient2(na.value = 'white',
     name = expression("estimated "~tilde(h)(t, t[e]))) +
   theme(panel.grid.minor = element_blank(),
     panel.grid.major = element_blank()) +
@@ -338,9 +338,12 @@ gg_stat <- ggplot(ll_stat, aes(x = Var2, y = rev(Var1))) +
     xlab(expression(paste("Nutrition day ", t[e])))
 
 library(cowplot)
-ggsave("ELRA_heatmaps_LL.eps", plot_grid(gridExtra::grid.arrange(gg_dyn, gg_stat, nrow = 1), gg_elra_est, nrow = 2), width=9, height=12)
-ggsave("ELRA_heatmaps_LL.pdf", plot_grid(gridExtra::grid.arrange(gg_dyn, gg_stat, nrow = 1), gg_elra_est, nrow = 2), width=9, height=12)
-ggsave("ELRA_heatmaps_LL.jpg", plot_grid(gridExtra::grid.arrange(gg_dyn, gg_stat, nrow = 1), gg_elra_est, nrow = 2), width=9, height=12)
+ggsave("ELRA_heatmaps_LL.eps", plot_grid(gridExtra::arrangeGrob(gg_dyn, gg_stat, nrow = 1),
+  gg_elra_est, nrow = 2), width=9, height=12)
+ggsave("ELRA_heatmaps_LL.pdf", plot_grid(gridExtra::arrangeGrob(gg_dyn, gg_stat, nrow = 1),
+  gg_elra_est, nrow = 2), width=9, height=12)
+ggsave("ELRA_heatmaps_LL.jpg", plot_grid(gridExtra::arrangeGrob(gg_dyn, gg_stat, nrow = 1),
+  gg_elra_est, nrow = 2), width=9, height=12)
 
 ###################### model comparisons #######################################
 #### compare via apparent C-Index
