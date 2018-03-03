@@ -58,7 +58,7 @@ could be of interest for researchers interested in replicating/reusing the data 
 example, thus most code is hard coded (including functions in `elrapack`) and
 will not be of much use for general settings.
 
-- We currently develop an R package that facilitates working with PAMMs, including data preparation, visualization, etc.. There are also a lot of vignettes with application examples: [pamm](!http://github.com/adibender/pamm)
+- We currently develop an R package that facilitates working with PAMMs, including data preparation, visualization, etc.. There are also a lot of vignettes with application examples: [pammtools](!http://github.com/adibender/pammtools)
 
 ### Folder structure
 - **`data`**: Raw data for the application example (after initial import
