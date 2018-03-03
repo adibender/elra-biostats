@@ -1,4 +1,7 @@
 # Evaluation of the association between nutritional adequacy and survival
+This is the Code and Data repository for: <br>
+
+Andreas Bender, Fabian Scheipl, Wolfgang Hartl, Andrew G Day, Helmut Küchenhoff; *Penalized estimation of complex, non-linear exposure-lag-response associations*, Biostatistics, , kxy003, https://doi.org/10.1093/biostatistics/kxy003
 
 ## How to rerun analysis:
 
@@ -58,12 +61,12 @@ could be of interest for researchers interested in replicating/reusing the data 
 example, thus most code is hard coded (including functions in `elrapack`) and
 will not be of much use for general settings.
 
-- We currently develop an R package that facilitates working with PAMMs, including data preparation, visualization, etc.. There are also a lot of vignettes with application examples: [pammtools](!http://github.com/adibender/pammtools)
+- We currently develop an R package that facilitates working with PAMMs, including data preparation, visualization, etc.. There are also a lot of vignettes with application examples: http://github.com/adibender/pammtools
 
 ### Folder structure
 - **`data`**: Raw data for the application example (after initial import
 from SAS and minor preprocessing)
-- **`dataGenerationScripts`**: Contains scripts for (further) data preprocessing. Creates folder **`dataCurrent`** and **`dataCurrentHosp`** (storing data for main and sensitivity analysis, respectively).
+- **`dataGenerationScripts`**: Contains scripts for (further) data preprocessing. Creates folder **`dataCurrent`** and **`dataCurrentHosp`** (storing data for main and sensitivity an analysis, respectively).
 Run `dataImportFromSAStoCleaned.R` to process all data processing steps
 - **`elrapack`**: A minimal R-package containing helper functions for data
 preparation/evaluation and simulation. This package is not meant to be broadly used, but rather a convenience package for storing helper functions (will be installed locally at the beginning of the `rerun-analyses.R` script).
