@@ -1,4 +1,6 @@
 # Evaluation of the association between nutritional adequacy and survival
+[![DOI](https://zenodo.org/badge/103416524.svg)](https://zenodo.org/badge/latestdoi/103416524)
+
 This is the Code and Data repository for: <br>
 
 Andreas Bender, Fabian Scheipl, Wolfgang Hartl, Andrew G Day, Helmut Küchenhoff; *Penalized estimation of complex, non-linear exposure-lag-response associations*, Biostatistics, , kxy003, https://doi.org/10.1093/biostatistics/kxy003
